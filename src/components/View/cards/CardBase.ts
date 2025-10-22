@@ -26,6 +26,8 @@ export abstract class CardBase<T extends IProduct> extends Component<T> {
       }
     }
   }
+
+  // Цена товара
   protected setPrice(price: HTMLSpanElement, value: number) {
     if (price) {
       price.textContent = value.toLocaleString();
@@ -37,6 +39,7 @@ export abstract class CardBase<T extends IProduct> extends Component<T> {
     }
   }
 
+  // Запись данных карточки товара
   protected setCardData(element: HTMLElement) {
     setElementData(element, {
       id: this.data.id ?? "",
@@ -48,5 +51,10 @@ export abstract class CardBase<T extends IProduct> extends Component<T> {
     });
   }
 
+    protected formatPrice(price?: string | number): string {
+  return price != null ? `${new Intl.NumberFormat("ru-RU").format(+price)} синапсов` : "";
+}
+
+  // Метод рендора карточки товара
   public abstract render(): HTMLElement;
 }

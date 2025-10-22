@@ -32,3 +32,13 @@ export interface IOrder {
   total: number;
   buyer: IBuyer;
 }
+
+export interface IOrderRequest extends IBuyer {
+  total: number;
+  items: string[];
+}
+
+export interface IOrderResponse {
+  id: string;
+  total: number;
+}
