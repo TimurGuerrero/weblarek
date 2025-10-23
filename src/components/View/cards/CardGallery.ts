@@ -28,7 +28,9 @@ export class CardGallery extends CardBase<IProduct> {
     // Добавление изображения
     const imgElement = card.querySelector<HTMLImageElement>(".card__image");
     if (imgElement && this.data.image) {
-      this.setImage(imgElement, this.data.image, this.data.title);
+      const imageUrl = this.data.image;
+      const pngUrl = imageUrl.replace(/\.\w+$/, ".png");
+      this.setImage(imgElement, pngUrl, this.data.title);
     }
 
     // Добавление цены
