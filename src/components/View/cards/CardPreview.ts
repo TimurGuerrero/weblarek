@@ -11,15 +11,12 @@ export interface ICardPreviewData extends IProduct {
 }
 
 export class CardPreview extends CardBase<ICardPreviewData> {
-  protected inBasket: boolean;
-
   constructor(
     container: HTMLElement,
     props: ICardPreviewData,
     events: IEvents
   ) {
     super(container, props, events);
-    this.inBasket = props.inBasket || false;
   }
 
   // Рендер карточки
@@ -66,7 +63,7 @@ export class CardPreview extends CardBase<ICardPreviewData> {
     const buttonElement =
       card.querySelector<HTMLButtonElement>(".card__button");
     if (buttonElement) {
-      buttonElement.textContent = this.inBasket
+      buttonElement.textContent = this.data.inBasket
         ? "Удалить из корзины"
         : this.data.buttonText || "Купить";
 
@@ -79,21 +76,18 @@ export class CardPreview extends CardBase<ICardPreviewData> {
       // Обработчик кнопки добавления/удаления
       buttonElement.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (this.inBasket) {
+        if (this.data.inBasket) {
           this.events.emit("card:remove", { productId: this.data.id });
-          this.inBasket = false;
+          this.data.inBasket = false;
         } else {
           this.events.emit("card:add", { productId: this.data.id });
-          this.inBasket = true;
+          this.data.inBasket = true;
         }
 
         // Меняем текст кнопки если товар уже добавлен в корзину
-        buttonElement.textContent = this.inBasket
+        buttonElement.textContent = this.data.inBasket
           ? "Удалить из корзины"
           : "Купить";
-
-        // Обновляем счётчик корзины
-        this.events.emit("cart:changed");
       });
     }
 

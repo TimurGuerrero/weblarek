@@ -5,12 +5,10 @@ import { CDN_URL } from "../../../utils/constants";
 import { setElementData } from "../../../utils/utils";
 
 export abstract class CardBase<T extends IProduct> extends Component<T> {
-  public data: T;
   public events: IEvents;
 
-  constructor(container: HTMLElement, data: T, events: IEvents) {
+  constructor(container: HTMLElement, protected data: T, events: IEvents) {
     super(container);
-    this.data = data;
     this.events = events;
   }
   // IMG карточки товара
@@ -51,9 +49,11 @@ export abstract class CardBase<T extends IProduct> extends Component<T> {
     });
   }
 
-    protected formatPrice(price?: string | number): string {
-  return price != null ? `${new Intl.NumberFormat("ru-RU").format(+price)} синапсов` : "";
-}
+  protected formatPrice(price?: string | number): string {
+    return price != null
+      ? `${new Intl.NumberFormat("ru-RU").format(+price)} синапсов`
+      : "";
+  }
 
   // Метод рендора карточки товара
   public abstract render(): HTMLElement;

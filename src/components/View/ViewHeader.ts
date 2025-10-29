@@ -2,20 +2,19 @@ import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 import { ensureElement } from "../../utils/utils";
 
-
 // Интерфейс данных шапки сайта
 interface IHeader {
   counter: number;
 }
 
 export class ViewHeader extends Component<IHeader> {
-    protected counterElement: HTMLElement;
-    protected basketButton: HTMLButtonElement;
+  protected counterElement: HTMLElement;
+  protected basketButton: HTMLButtonElement;
 
-    constructor(protected events: IEvents, container: HTMLElement) {
+  constructor(protected events: IEvents, container: HTMLElement) {
     super(container);
 
-        // Поиск элемента счётчика корзины
+    // Поиск элемента счётчика корзины
     this.counterElement = ensureElement<HTMLElement>(
       ".header__basket-counter",
       this.container
@@ -34,12 +33,7 @@ export class ViewHeader extends Component<IHeader> {
   }
 
   // Количество товаров в корзине
-  set counter(value: number) {
+  setCounter(value: number) {
     this.counterElement.textContent = String(value);
-  }
-
-  // Текущее количество товаров в корзине
-  get counter(): number {
-    return Number(this.counterElement.textContent) || 0;
   }
 }
