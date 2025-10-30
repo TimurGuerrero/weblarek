@@ -33,6 +33,15 @@ export class CardBasket extends CardBase<ICardBasketData> {
         this.data.price != null ? this.formatPrice(this.data.price) : "";
     }
 
+    // Кнопка удаления
+    const deleteButton = card.querySelector<HTMLButtonElement>(".basket__item-delete");
+    if (deleteButton) {
+      deleteButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.events.emit("card:remove", { productId: this.data.id });
+      });
+    }
+    
     // Сохраняем данные в dataset
     this.setCardData(card);
 
