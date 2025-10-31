@@ -1,55 +1,57 @@
 import { CardBase } from "./CardBase";
 import { IProduct } from "../../../types";
 import { IEvents } from "../../base/Events";
-import { cloneTemplate } from "../../../utils/utils";
+import { cloneTemplate, formatPrice } from "../../../utils/utils";
 import { categoryMap } from "../../../utils/constants";
 
 export class CardGallery extends CardBase<IProduct> {
-  constructor(container: HTMLElement, property: IProduct, events: IEvents) {
-    super(container, property, events);
+  protected cardElement: HTMLElement;
+  protected titleElement: HTMLElement | null;
+  protected categoryElement: HTMLElement | null;
+  protected imageElement: HTMLImageElement | null;
+  protected priceElement: HTMLElement | null;
+
+  constructor(container: HTMLElement, id: string, events: IEvents) {
+    super(container, events);
+
+    this.cardElement = cloneTemplate<HTMLElement>("#card-catalog");
+    this.titleElement = this.cardElement.querySelector(".card__title");
+    this.categoryElement = this.cardElement.querySelector(".card__category");
+    this.imageElement =
+      this.cardElement.querySelector<HTMLImageElement>(".card__image");
+    this.priceElement = this.cardElement.querySelector(".card__price");
+
+    // События при клике
+    this.cardElement.addEventListener("click", () => {
+      this.events.emit("card:select", { productId: id });
+    });
   }
 
-  public render(): HTMLElement {
-    const card = cloneTemplate<HTMLElement>("#card-catalog");
-
+  public render(props: IProduct): HTMLElement {
     // Добавление заголовка
-    const titleElement = card.querySelector(".card__title");
-    if (titleElement) titleElement.textContent = this.data.title;
+    if (this.titleElement) this.titleElement.textContent = props.title;
 
     // Добавление категории
-    const categoryElement = card.querySelector(".card__category");
-    if (categoryElement && this.data.category) {
-      categoryElement.textContent = this.data.category;
+    if (this.categoryElement && props.category) {
+      this.categoryElement.textContent = props.category;
       const categoryClass =
-        categoryMap[this.data.category as keyof typeof categoryMap] ?? "";
-      if (categoryClass) categoryElement.classList.add(categoryClass);
+        categoryMap[props.category as keyof typeof categoryMap] ?? "";
+      if (categoryClass) this.categoryElement.classList.add(categoryClass);
     }
 
     // Добавление изображения
-    const imgElement = card.querySelector<HTMLImageElement>(".card__image");
-    if (imgElement && this.data.image) {
-      const imageUrl = this.data.image;
+    if (this.imageElement && props.image) {
+      const imageUrl = props.image;
       const pngUrl = imageUrl.replace(/\.\w+$/, ".png");
-      this.setImage(imgElement, pngUrl, this.data.title);
+      this.setImage(this.imageElement, pngUrl, props.title);
     }
 
     // Добавление цены
-    const priceElement = card.querySelector(".card__price");
-    if (priceElement) {
-      priceElement.textContent =
-        this.data.price != null
-          ? this.formatPrice(this.data.price)
-          : "Бесценно";
+    if (this.priceElement) {
+      this.priceElement.textContent =
+        props.price != null ? formatPrice(props.price) : "Бесценно";
     }
 
-    // Сохранить данные
-    this.setCardData(card);
-
-    // События при клике
-    card.addEventListener("click", () => {
-      this.events.emit("card:select", { productId: this.data.id });
-    });
-
-    return card;
+    return this.cardElement;
   }
 }

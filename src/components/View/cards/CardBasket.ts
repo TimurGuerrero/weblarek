@@ -1,51 +1,70 @@
 import { CardBase } from "./CardBase";
-import { cloneTemplate } from "../../../utils/utils";
+import { cloneTemplate, formatPrice } from "../../../utils/utils";
 import { IEvents } from "../../base/Events";
 import { IProduct } from "../../../types";
 
 // Интерфейс для данных корзины
-export interface ICardBasketData extends IProduct {
+export interface ICardBasketItemData extends IProduct {
   index: number;
 }
 
 // Класс карточки товара в корзине
-export class CardBasket extends CardBase<ICardBasketData> {
-  constructor(container: HTMLElement, props: ICardBasketData, events: IEvents) {
-    super(container, props, events);
+export class CardBasket extends CardBase<ICardBasketItemData> {
+  protected cardElement: HTMLElement;
+  protected deleteButtonElement: HTMLButtonElement | null;
+  protected counterElement: HTMLElement | null;
+  protected titleElement: HTMLElement | null;
+  protected priceElement: HTMLElement | null;
+  protected id: string;
+
+  constructor(container: HTMLElement, id: string, events: IEvents) {
+    super(container, events);
+
+    this.cardElement = cloneTemplate<HTMLElement>("#card-basket");
+    this.deleteButtonElement =
+      this.cardElement.querySelector<HTMLButtonElement>(".basket__item-delete");
+    this.counterElement = this.cardElement.querySelector<HTMLElement>(
+      ".basket__item-index"
+    );
+    this.titleElement =
+      this.cardElement.querySelector<HTMLElement>(".card__title");
+    this.priceElement =
+      this.cardElement.querySelector<HTMLElement>(".card__price");
+    this.id = id;
+
+    // Обработчик клика по кнопке удаления товара из корзины
+    if (this.deleteButtonElement) {
+      this.deleteButtonElement.addEventListener("click", (e: Event) => {
+        e.stopPropagation();
+        this.events.emit("card:remove", { productId: id });
+      });
+    }
   }
 
   // Рендер карточки корзины
-  public render(): HTMLElement {
-    const card = cloneTemplate<HTMLElement>("#card-basket");
-
+  public render(props: ICardBasketItemData): HTMLElement {
     // Номер по порядку в списке покупок в корзине
-    const indexElement = card.querySelector(".basket__item-index");
-    if (indexElement) indexElement.textContent = String(this.data.index);
+    if (this.counterElement)
+      this.counterElement.textContent = String(props.index);
 
     // Название товара
-    const titleElement = card.querySelector(".card__title");
-    if (titleElement) titleElement.textContent = this.data.title;
+    if (this.titleElement) this.titleElement.textContent = props.title;
 
     // Цена товара
-    const priceElement = card.querySelector(".card__price");
-    if (priceElement) {
-      priceElement.textContent =
-        this.data.price != null ? this.formatPrice(this.data.price) : "";
+    if (this.priceElement) {
+      this.priceElement.textContent =
+        props.price != null ? formatPrice(props.price) : "";
     }
 
-    // Кнопка удаления
-    const deleteButton = card.querySelector<HTMLButtonElement>(".basket__item-delete");
-    if (deleteButton) {
-      deleteButton.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.events.emit("card:remove", { productId: this.data.id });
-      });
-    }
-    
-    // Сохраняем данные в dataset
-    this.setCardData(card);
-
-    return card;
+    return this.cardElement;
   }
 
+  public destroy(): void {
+    if (this.deleteButtonElement) {
+      this.deleteButtonElement.removeEventListener("click", (e: Event) => {
+        e.stopPropagation();
+        this.events.emit("card:remove", { productId: this.id });
+      });
+    }
+  }
 }

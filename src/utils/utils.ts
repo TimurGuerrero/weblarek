@@ -136,3 +136,9 @@ export function createElement<
     }
     return element;
 }
+
+export function formatPrice(price?: string | number): string {
+    return price != null
+        ? `${new Intl.NumberFormat("ru-RU").format(+price)} синапсов`
+        : "";
+}

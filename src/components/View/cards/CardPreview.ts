@@ -1,5 +1,5 @@
 import { CardBase } from "./CardBase";
-import { cloneTemplate } from "../../../utils/utils";
+import { cloneTemplate, formatPrice } from "../../../utils/utils";
 import { IProduct } from "../../../types";
 import { IEvents } from "../../base/Events";
 import { categoryMap } from "../../../utils/constants";
@@ -11,89 +11,98 @@ export interface ICardPreviewData extends IProduct {
 }
 
 export class CardPreview extends CardBase<ICardPreviewData> {
+  protected cardElement: HTMLElement;
+  protected titleElement: HTMLElement | null;
+  protected descriptionElement: HTMLElement | null;
+  protected priceElement: HTMLElement | null;
+  protected imageElement: HTMLImageElement | null;
+  protected categoryElement: HTMLElement | null;
+  protected buttonElement: HTMLButtonElement | null;
+
   constructor(
     container: HTMLElement,
-    props: ICardPreviewData,
+    id: string,
+    inBasket: boolean = false,
     events: IEvents
   ) {
-    super(container, props, events);
+    super(container, events);
+
+    this.cardElement = cloneTemplate<HTMLElement>("#card-preview");
+    this.titleElement = this.cardElement.querySelector(".card__title");
+    this.descriptionElement = this.cardElement.querySelector(".card__text");
+    this.priceElement = this.cardElement.querySelector(".card__price");
+    this.imageElement =
+      this.cardElement.querySelector<HTMLImageElement>(".card__image");
+    this.categoryElement = this.cardElement.querySelector(".card__category");
+    this.buttonElement =
+      this.cardElement.querySelector<HTMLButtonElement>(".card__button");
+
+    // Обработчик кнопки добавления/удаления
+    if (this.buttonElement) {
+      this.buttonElement.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (inBasket) {
+          this.events.emit("card:remove", { productId: id });
+          inBasket = false;
+        } else {
+          this.events.emit("card:add", { productId: id });
+          inBasket = true;
+        }
+
+        if (this.buttonElement) {
+          // Меняем текст кнопки если товар уже добавлен в корзину
+          this.buttonElement.textContent = inBasket
+            ? "Удалить из корзины"
+            : "Купить";
+        }
+      });
+    }
   }
 
   // Рендер карточки
-  public render(): HTMLElement {
-    const card = cloneTemplate<HTMLElement>("#card-preview");
-
+  public render(props: ICardPreviewData): HTMLElement {
     // Заголовок карточки
-    const titleElement = card.querySelector(".card__title");
-    if (titleElement) titleElement.textContent = this.data.title;
+    if (this.titleElement) this.titleElement.textContent = props.title;
 
     // Описание карточки товара
-    const descriptionEl = card.querySelector(".card__text");
-    if (descriptionEl && this.data.description) {
-      descriptionEl.textContent = this.data.description;
+    if (this.descriptionElement && props.description) {
+      this.descriptionElement.textContent = props.description;
     }
 
     // Цена товара
-    const priceElement = card.querySelector(".card__price");
-    if (priceElement) {
-      priceElement.textContent =
-        this.data.price != null
-          ? this.formatPrice(this.data.price)
-          : "Бесценно";
+    if (this.priceElement) {
+      this.priceElement.textContent =
+        props.price != null ? formatPrice(props.price) : "Бесценно";
     }
 
     // Изображение товара
-    const imgElement = card.querySelector<HTMLImageElement>(".card__image");
-    if (imgElement && this.data.image) {
-      const imageUrl = this.data.image;
+    if (this.imageElement && props.image) {
+      const imageUrl = props.image;
       const pngUrl = imageUrl.replace(/\.\w+$/, ".png");
-      this.setImage(imgElement, pngUrl, this.data.title);
+      this.setImage(this.imageElement, pngUrl, props.title);
     }
 
     // Категория и класс товара
-    const categoryEl = card.querySelector(".card__category");
-    if (categoryEl && this.data.category) {
-      categoryEl.textContent = this.data.category;
+    if (this.categoryElement && props.category) {
+      this.categoryElement.textContent = props.category;
       const categoryClass =
-        categoryMap[this.data.category as keyof typeof categoryMap] ?? "";
-      if (categoryClass) categoryEl.classList.add(categoryClass);
+        categoryMap[props.category as keyof typeof categoryMap] ?? "";
+      if (categoryClass) this.categoryElement.classList.add(categoryClass);
     }
 
     // Кнопка — меняем текст в зависимости от состояния (в корзине/не в корзине)
-    const buttonElement =
-      card.querySelector<HTMLButtonElement>(".card__button");
-    if (buttonElement) {
-      buttonElement.textContent = this.data.inBasket
+    if (this.buttonElement) {
+      this.buttonElement.textContent = props.inBasket
         ? "Удалить из корзины"
-        : this.data.buttonText || "Купить";
+        : props.buttonText || "Купить";
 
       // Кнопка неактивна если цена отсутствует
-      if (!this.data.price) {
-        buttonElement.disabled = true;
-        buttonElement.classList.add("button_disabled");
+      if (!props.price) {
+        this.buttonElement.disabled = true;
+        this.buttonElement.classList.add("button_disabled");
       }
-
-      // Обработчик кнопки добавления/удаления
-      buttonElement.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (this.data.inBasket) {
-          this.events.emit("card:remove", { productId: this.data.id });
-          this.data.inBasket = false;
-        } else {
-          this.events.emit("card:add", { productId: this.data.id });
-          this.data.inBasket = true;
-        }
-
-        // Меняем текст кнопки если товар уже добавлен в корзину
-        buttonElement.textContent = this.data.inBasket
-          ? "Удалить из корзины"
-          : "Купить";
-      });
     }
 
-    // Сохраняем данные карточки
-    this.setCardData(card);
-
-    return card;
+    return this.cardElement;
   }
 }

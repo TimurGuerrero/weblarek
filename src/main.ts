@@ -4,7 +4,7 @@ import { ProductCatalogModel } from "./components/models/ProductCatalogModel";
 import { ShoppingCartModel } from "./components/models/ShoppingCartModel";
 import { Buyer } from "./components/models/BuyerModel";
 
-import { IOrderRequest, TPayment } from "./types/index";
+import { IOrderRequest, TPayment } from "./types";
 
 import { Api } from "./components/base/Api";
 import { StallAPI } from "./components/base/StallAPI";
@@ -20,7 +20,6 @@ import { ViewSuccess } from "./components/View/ViewSuccess";
 import { FormContact } from "./components/View/forms/FormContact";
 import { FormOrder } from "./components/View/forms/FormOrder";
 
-import { CardGallery } from "./components/View/cards/CardGallery";
 import { CardPreview } from "./components/View/cards/CardPreview";
 import { CardBasket } from "./components/View/cards/CardBasket";
 
@@ -52,11 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const items = await stallApi.fetchProducts();
     productCatalog.setItems(items);
-
-    catalog.itemElement = items.map(
-      (item) =>
-        new CardGallery(document.createElement("div"), { ...item }, events)
-    );
+    catalog.render({items, events});
   } catch (err) {
     console.error("Ошибка загрузки товаров:", err);
   }
@@ -71,15 +66,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     const inBasket = shoppingCart.isInCart(product.id);
     const preview = new CardPreview(
       document.createElement("div"),
-      {
-        ...product,
-        inBasket,
-        buttonText: inBasket ? "Удалить из корзины" : "Купить",
-      },
+      product.id,
+      inBasket,
       events
     );
 
-    modal.open(preview.render());
+    modal.open(preview.render({
+      ...product,
+      inBasket,
+      buttonText: inBasket ? "Удалить из корзины" : "Купить",
+    }));
   });
 
   // Формирование данных заказа
@@ -132,10 +128,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const items = shoppingCart.getItems().map((product, index) => {
       const card = new CardBasket(
         document.createElement("div"),
-        { ...product, index: index + 1 },
+        product.id,
         events
       );
-      return card.render();
+      return card.render({...product, index});
     });
     basketView.setItems(items);
     basketView.setTotalPrice(shoppingCart.getTotal());
